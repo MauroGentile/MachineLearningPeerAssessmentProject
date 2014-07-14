@@ -10,10 +10,11 @@ The corresponding .Rmd source file with the code used to perform the analysis ca
 After an initial preprocessing, data will be split into a training set, representing the 70% of available data, and a validation set representing the remaining 30% of data. A total of 7 different classification models (Random Forest, Knn, C5, GBM, Linear, Quadratic and Flexible Discrmininant Analysis) will be then built on the training set and optimized through a 10 folds cross validation.
 
 The several models will be finally compared in terms of:  
-1. accuracy, evaluated on the validation set  
+1. accuracy, evaluated on the validation set   
 2. training time, that is to say, the time needed by each model to train the training set  
 
-As a result, it will be shown that Random Forest and C5 are the best performing alghorithms, both reaching a 99,4% accuracy.
+As a result, it will be shown that Random Forest and C5 are the best performing alghorithms, both reaching a 99,4% accuracy on the validation set or, in other words, an Out of Sample Error of 0,6% indicating a really good fit of both models.
+
 However C5 algorithm takes 1/4 of elapse time to train the same data set: on my iMac 2.7 GHz Core i5 with 8 GB 1600 DDR3 memory, while RF took 1 hr and 30 minutes to make a 10 cross validation on the training set, C5 took only 23 minutes to perform the same operation on the same data set.  
 
 In other words, RF and C5 are indistinguishable models from an accuracy point of view but C5 is a much faster algorithm than Random Forest. At least on this data set. For this reason, C5 is chosen as best model.  
@@ -201,14 +202,13 @@ cm_GBM <- confusionMatrix(validation$classe, predict(GBM, validation))
 While the graphic comparison of accuracy and confidence intervals of the 7 models will be performed in the next paragraph, the tabular version of all these confusion matrices can be found the Appendix 1.  
 
 
-### Plot of accuracies
+### Plot of accuracies on validation set (which is equivalent to 1-Out of Sample Error)
 
-In the following plot, accuracy of each method will be displayed together with its confidence interval.
+In the following plot, accuracy on the validation set of each method will be displayed together with its confidence interval. The corresponding out of sample error is the complement to 1 of accuracy.
 
-Two methods stands out from the rest and are virtually indistinguishable one other:
-Random Forest and C5 with an accuracy of 99,4% and a very narrow confidence interval (0.4% wide).
+Two methods stands out from the rest and are virtually indistinguishable one other: Random Forest and C5 with an accuracy of 99,4% and a very narrow confidence interval. The corresponding Out of Sample Error is 0.6%.
 
-Other 2 well performing techniques are the Knn and GBM with an accuracy of 96,6% and 95,8 respectively but a wider confidence interval with respect to RF and C5.
+Other 2 well performing techniques are the Knn and GBM with an accuracy of 96,6% and 95,8% respectively but a wider confidence interval with respect to RF and C5.
 
 The discriminant analysis models performance are much worse with accuracies lower than 90%. The LDA is especially poor with an accuracy as low as 71,1%.
 
@@ -368,7 +368,7 @@ On the other hand, as expected, Knn was the fastest model to perform the predict
 
 ## CONCLUSIONS
 
-We have seen that while Random Forest and C5 are the best model on this data set and virtually indistinguishable each other, C5 is much better than Random Forest since it reaches the same results in a much shorter time. C5 is therefore chosen as preferred model on this data set.
+We have seen that while Random Forest and C5 are the best model on this data set and virtually indistinguishable each other with an Out of Sample error of 0,6%, C5 is much better than Random Forest since it reaches the same results in a much shorter time. C5 is therefore chosen as preferred model on this data set.
 
 Knn may become a excellent alternative if training elapsed time is a concern:  giving up for a few points in accuracy, substantial gaining in training and testing processing times can be achieved.
 

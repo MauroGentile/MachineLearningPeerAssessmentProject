@@ -61,7 +61,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <p>The corresponding .Rmd source file with the code used to perform the analysis can be found at the following Github repository: <a href="https://github.com/MauroGentile/PracMachineLearning">https://github.com/MauroGentile/PracMachineLearning</a></p>
 <p>After an initial preprocessing, data will be split into a training set, representing the 70% of available data, and a validation set representing the remaining 30% of data. A total of 7 different classification models (Random Forest, Knn, C5, GBM, Linear, Quadratic and Flexible Discrmininant Analysis) will be then built on the training set and optimized through a 10 folds cross validation.</p>
 <p>The several models will be finally compared in terms of:<br />1. accuracy, evaluated on the validation set<br />2. training time, that is to say, the time needed by each model to train the training set</p>
-<p>As a result, it will be shown that Random Forest and C5 are the best performing alghorithms, both reaching a 99,4% accuracy. However C5 algorithm takes 1/4 of elapse time to train the same data set: on my iMac 2.7 GHz Core i5 with 8 GB 1600 DDR3 memory, while RF took 1 hr and 30 minutes to make a 10 cross validation on the training set, C5 took only 23 minutes to perform the same operation on the same data set.</p>
+<p>As a result, it will be shown that Random Forest and C5 are the best performing alghorithms, both reaching a 99,4% accuracy on the validation set or, in other words, an Out of Sample Error of 0,6% indicating a really good fit of both models.</p>
+<p>However C5 algorithm takes 1/4 of elapse time to train the same data set: on my iMac 2.7 GHz Core i5 with 8 GB 1600 DDR3 memory, while RF took 1 hr and 30 minutes to make a 10 cross validation on the training set, C5 took only 23 minutes to perform the same operation on the same data set.</p>
 <p>In other words, RF and C5 are indistinguishable models from an accuracy point of view but C5 is a much faster algorithm than Random Forest. At least on this data set. For this reason, C5 is chosen as best model.</p>
 <p>Nevertheless, if computing resources or timing is an issue and the training procedure has to be frequently repeated (for instance if the data set gets frequently updated), Knn may become an excellent alternative because while not reaching an accuracy as high as C5, it’s still an excellent model with a superb 96,6% accuracy but taking only 1 minute and a half to train the data, 60 times lower than Random Forest and 15 time lower than C5.</p>
 <p>In other words, in special circumstances, we may end up preferring Knn over C5, foregoing a little bit of accuracy for the sake of training speed.</p>
@@ -212,11 +213,11 @@ cm_fda &lt;- confusionMatrix(validation$classe, predict(fda, validation))
 cm_GBM &lt;- confusionMatrix(validation$classe, predict(GBM, validation))</code></pre>
 <p>While the graphic comparison of accuracy and confidence intervals of the 7 models will be performed in the next paragraph, the tabular version of all these confusion matrices can be found the Appendix 1.</p>
 </div>
-<div id="plot-of-accuracies" class="section level3">
-<h3>Plot of accuracies</h3>
-<p>In the following plot, accuracy of each method will be displayed together with its confidence interval.</p>
-<p>Two methods stands out from the rest and are virtually indistinguishable one other: Random Forest and C5 with an accuracy of 99,4% and a very narrow confidence interval (0.4% wide).</p>
-<p>Other 2 well performing techniques are the Knn and GBM with an accuracy of 96,6% and 95,8 respectively but a wider confidence interval with respect to RF and C5.</p>
+<div id="plot-of-accuracies-on-validation-set-which-is-equivalent-to-1-out-of-sample-error" class="section level3">
+<h3>Plot of accuracies on validation set (which is equivalent to 1-Out of Sample Error)</h3>
+<p>In the following plot, accuracy on the validation set of each method will be displayed together with its confidence interval. The corresponding out of sample error is the complement to 1 of accuracy.</p>
+<p>Two methods stands out from the rest and are virtually indistinguishable one other: Random Forest and C5 with an accuracy of 99,4% and a very narrow confidence interval. The corresponding Out of Sample Error is 0.6%.</p>
+<p>Other 2 well performing techniques are the Knn and GBM with an accuracy of 96,6% and 95,8% respectively but a wider confidence interval with respect to RF and C5.</p>
 <p>The discriminant analysis models performance are much worse with accuracies lower than 90%. The LDA is especially poor with an accuracy as low as 71,1%.</p>
 <p>The fact that LDA performs much worse than QDA which in turns performs much worse than Knn confirms that this is a problem with highly non linear decision boundaries among classes.</p>
 <pre class="r"><code>Models &lt;- data.frame(
@@ -346,7 +347,7 @@ c5_knn_ratio &lt;-  c5_test_time[3]/knn_test_time[3]</code></pre>
 </div>
 <div id="conclusions" class="section level2">
 <h2>CONCLUSIONS</h2>
-<p>We have seen that while Random Forest and C5 are the best model on this data set and virtually indistinguishable each other, C5 is much better than Random Forest since it reaches the same results in a much shorter time. C5 is therefore chosen as preferred model on this data set.</p>
+<p>We have seen that while Random Forest and C5 are the best model on this data set and virtually indistinguishable each other with an Out of Sample error of 0,6%, C5 is much better than Random Forest since it reaches the same results in a much shorter time. C5 is therefore chosen as preferred model on this data set.</p>
 <p>Knn may become a excellent alternative if training elapsed time is a concern: giving up for a few points in accuracy, substantial gaining in training and testing processing times can be achieved.</p>
 </div>
 <div id="appendix-1-confusion-matrix-of-each-of-the-7-considered-models" class="section level2">
