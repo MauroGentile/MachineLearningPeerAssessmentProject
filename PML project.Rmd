@@ -1,0 +1,385 @@
+Weight Lifting Exercise data analysis
+========================================================
+  
+  
+## SUMMARY 
+In this paper, several models will be built to fit the Weight Lifting Exercise data. The models will be compared each other and the best performing one will be chosen to make predictions on which class test data belongs to.
+
+After an initial preprocessing, data will be split into a training set, representing the 70% of available data, and a validation set representing the remaining 30% of data. A total of 7 different classification models (Random Forest, Knn, C5, GBM, Linear, Quadratic and Flexible Discrmininant Analysis) will be then built on the training set and optimized through a 10 folds cross validation.
+
+The several models will be finally compared in terms of:  
+1. accuracy, evaluated on the validation set  
+2. training time, that is to say, the time needed by each model to train the training set  
+
+As a result, it will be shown that Random Forest and C5 are the best performing alghorithms, both reaching a 99,4% accuracy.
+However C5 algorithm takes 1/4 of elapse time to train the same data set: on my iMac 2.7 GHz Core i5 with 8 GB 1600 DDR3 memory, while RF took 1 hr and 30 minutes to make a 10 cross validation on the training set, C5 took only 23 minutes to perform the same operation on the same data set.  
+
+In other words, RF and C5 are indistinguishable models from an accuracy point of view but C5 is a much faster algorithm than Random Forest. At least on this data set. For this reason, C5 is chosen as best model.  
+
+Nevertheless, if computing resources or timing is an issue and the training procedure has to be frequently repeated (for instance if the data set gets frequently updated), Knn may become an excellent alternative because while not reaching an accuracy as high as C5, it's still an excellent model with a superb 96,6% accuracy but taking only 1 minute and a half to train the data, 60 times lower than Random Forest and 15 time lower than C5.
+
+In other words, in special circumstances, we may end up preferring Knn over C5, foregoing a little bit of accuracy for the sake of training speed.
+
+## PRELIMINARY SET-UP
+
+### Loading and preprocessing
+Let's first load the data from the training file and make the introductory manipulations.  
+In order we will:  
+1. read the data  
+2. replace non numeric values with NA's  
+3. exclude the first 7 columns which have nothing to do with the output  
+4. exclude those variables with more than 95% of NA values  
+ 
+ 
+```{r reading, echo=TRUE, cache=TRUE, results='hide'}
+library(caret)
+initialTrainingDataset <- read.csv("pml-training.csv", header = TRUE)
+```
+
+
+
+```{r replace_non_numeric values, echo=TRUE, cache=TRUE, results='hide'}
+suppressWarnings(for (i in 1:(ncol(initialTrainingDataset)-1)) initialTrainingDataset[,i] <- as.numeric(as.character(initialTrainingDataset[,i])))
+```
+
+
+```{r column_selections, echo=TRUE, cache=TRUE, results='hide'}
+# exclude the first 7 columns
+PartiallyCleanedTrainingData <- initialTrainingDataset[,-c(1:7)]
+
+# exclude all columns with more than 95% of NAs values
+FinalTrainingData <- PartiallyCleanedTrainingData[, -which(colSums(is.na(PartiallyCleanedTrainingData))/nrow(PartiallyCleanedTrainingData) > 0.95)]
+
+```
+
+
+### Split in training and validation sets
+Training set will be extracted through the function "createDataPartition" in the caret package which will make a "stratified" extraction (i.e. maintaining the output class balance as in the original data set).
+Since there is a large amount of data available, we can build the models using up to 70% of data while the remaining 30% will be used to evaluate accuracies.
+
+```{r splitting, echo=TRUE, cache=TRUE}
+inTrain <- createDataPartition(y = FinalTrainingData$classe, p = 0.7, list= FALSE)
+train <- FinalTrainingData[inTrain, ]
+validation <- FinalTrainingData[-inTrain, ]
+dim(train)
+dim(validation)
+```
+
+
+### Class balance check
+In classifications problems it is important to check weather classes are balanced. 
+
+```{r classbalance, echo=TRUE, cache=TRUE}
+table(train$classe)
+```
+In this case, while class A is much more populated than the other classes, the imbalance is not cause of concern.
+
+
+
+## MODELS BUILDING
+In the following several classification models will be applied on training data:  
+1. RF: Random forest  
+2. LDA: Linear Discriminant Analysis  
+3. QDA: Quadratic Discriminant Analysis  
+4. FDA: Flexible Discriminant Analysis  
+5. GBM: Gradient boosting  
+6. KNN: k-nearest neighbors  
+7. C5: evolution of C4.5  
+
+Each model will be automatically optimized through a 10 fold cross validation passed as a parameter to the train function from the caret package (parameters: method="cv", number=10). 
+
+Center and scale preprocessing will be applied exclusively to LDA, QDA, FDA and Knn since the other models are not sensitive to such preprocessing (refer to "applied predictive modeling", by Max Kuhn and Kjell Johnson 2013, pg. 550).
+
+Through the function proc.time(), the processing time of each method will be also evaluated and stored for subsequent comparative analysis. 
+
+### RANDOM FOREST
+
+```{r randomForest, echo=TRUE, cache=TRUE}
+set.seed(100)
+ptm <- proc.time()
+rf <- train(classe ~ ., data = train, method = "rf", prox =
+              TRUE, trControl = trainControl(method = "cv",
+                                             number = 10))
+rf_time<- proc.time() - ptm
+```
+
+
+
+### LDA
+```{r LDA, echo=TRUE, cache=TRUE}
+set.seed(100)
+ptm <- proc.time()
+lda <- train(classe ~ .,data = train, 
+             method = "lda",
+             preProc = c("center","scale"),
+             trControl = trainControl(method = "cv", number=10))
+LDA_time<- proc.time() - ptm
+```
+
+### QDA
+```{r QDA, echo=TRUE, cache=TRUE}
+
+set.seed(100)
+ptm <- proc.time()
+qda <- train(classe ~ ., data = train,
+              method = "qda",
+              preProc = c("center","scale"),
+              trControl = trainControl(method = "cv", number=10))
+QDA_time<- proc.time() - ptm
+
+```
+
+
+
+
+### FDA
+```{r FDA, echo=TRUE, cache=TRUE}
+
+set.seed(100)
+ptm <- proc.time()
+fda <- train(classe ~ .,data = train,
+             method = "fda",
+             preProc = c("center","scale"),
+             trControl = trainControl(method = "cv", number=10))
+FDA_time<- proc.time() - ptm
+```
+
+
+
+
+
+
+### GBM
+```{r boost, echo=TRUE, cache=TRUE, results='hide'}
+set.seed(100)
+ptm <- proc.time()
+GBM <- train(classe ~ ., method = "gbm", data = train, trControl = trainControl(method = "cv", number=10))
+GBM_time<- proc.time() - ptm
+```
+
+### Knn
+```{r KNN, echo=TRUE, cache=TRUE}
+
+set.seed(100)
+ptm <- proc.time()
+knn <- train(classe ~ .,data = train,
+             method = "knn",
+             preProc = c("center","scale"),
+             trControl = trainControl(method = "cv", number=10))  
+knn_time<- proc.time() - ptm
+```
+
+### C5
+```{r c5, echo=TRUE, cache=TRUE}
+set.seed(100)
+ptm <- proc.time()
+c5 <- train(classe ~ .,data = train,
+            trControl = trainControl(method = "cv",
+                                     number = 10))
+c5_time<- proc.time() - ptm
+```
+
+
+## ACCURACY EVALUATION ON THE VALIDATION SET AND BEST MODEL SELECTION
+
+### Confusion matrix
+
+Confusion matrix for each model will now be calculated on the validation set.
+
+```{r cm, echo=TRUE, cache=TRUE}
+cm_rf <- confusionMatrix(validation$classe, predict(rf, validation))
+cm_knn <- confusionMatrix(validation$classe, predict(knn, validation))
+cm_c5 <- confusionMatrix(validation$classe, predict(c5, validation))
+cm_lda <- confusionMatrix(validation$classe, predict(lda, validation))
+cm_qda <- confusionMatrix(validation$classe, predict(qda, validation))
+cm_fda <- confusionMatrix(validation$classe, predict(fda, validation))
+cm_GBM <- confusionMatrix(validation$classe, predict(GBM, validation))
+```
+
+While the graphic comparison of accuracy and confidence intervals of the 7 models will be performed in the next paragraph, the tabular version of all these confusion matrices can be found the Appendix 1.  
+
+
+### Plot of accuracies
+
+In the following plot, accuracy of each method will be displayed together with its confidence interval.
+
+Two methods stands out from the rest and are virtually indistinguishable one other:
+Random Forest and C5 with an accuracy of 99,4% and a very narrow confidence interval (0.4% wide).
+
+Other 2 well performing techniques are the Knn and GBM with an accuracy of 96,6% and 95,8 respectively but a wider confidence interval with respect to RF and C5.
+
+The discriminant analysis models performance are much worse with accuracies lower than 90%. The LDA is especially poor with an accuracy as low as 71,1%.
+
+The fact that LDA performs much worse than QDA which in turns performs much worse than Knn confirms that this is a problem with highly non linear decision boundaries among classes. 
+
+
+```{r df, echo=TRUE, cache=TRUE}
+Models <- data.frame(
+                    name=character(),
+                    accuracy=numeric(),
+                    lower=numeric(),
+                    upper=numeric(),
+                    system_time=numeric(),
+                    user_time=numeric(),
+                    elapsed_time=numeric(),
+                    stringsAsFactors=FALSE
+                    )               
+
+Models <- data.frame(name="Random forests", accuracy=cm_rf$overall[1], lower=cm_rf$overall[3], upper=cm_rf$overall[4], elapsed_time=rf_time[3], user_time=rf_time[1]+rf_time[4], system_time=rf_time[2]+rf_time[5])
+
+Models <- rbind(Models, data.frame(name="KNN", accuracy=cm_knn$overall[1], lower=cm_knn$overall[3], upper=cm_knn$overall[4], elapsed_time=knn_time[3], user_time=knn_time[1]+knn_time[4], system_time=knn_time[2]+knn_time[5]))
+
+Models <- rbind(Models, data.frame(name="C5", accuracy=cm_c5$overall[1], lower=cm_c5$overall[3], upper=cm_c5$overall[4], elapsed_time=c5_time[3], user_time=c5_time[1]+c5_time[4], system_time=c5_time[2]+c5_time[5]))
+                                   
+Models <- rbind(Models, data.frame(name="LDA", accuracy=cm_lda$overall[1], lower=cm_lda$overall[3], upper=cm_lda$overall[4], elapsed_time=LDA_time[3], user_time=LDA_time[1]+LDA_time[4], system_time=LDA_time[2]+LDA_time[5]))
+
+Models <- rbind(Models, data.frame(name="QDA", accuracy=cm_qda$overall[1], lower=cm_qda$overall[3], upper=cm_qda$overall[4], elapsed_time=QDA_time[3], user_time=QDA_time[1]+QDA_time[4], system_time=QDA_time[2]+QDA_time[5]))
+                                   
+Models <- rbind(Models, data.frame(name="FDA", accuracy=cm_fda$overall[1], lower=cm_fda$overall[3], upper=cm_fda$overall[4], elapsed_time=FDA_time[3], user_time=FDA_time[1]+FDA_time[4], system_time=FDA_time[2]+FDA_time[5]))
+
+Models <- rbind(Models, data.frame(name="GBM", accuracy=cm_GBM$overall[1], lower=cm_GBM$overall[3], upper=cm_GBM$overall[4], elapsed_time=GBM_time[3], user_time=GBM_time[1]+GBM_time[4], system_time=GBM_time[2]+GBM_time[5]))
+```
+
+```{r accuracy_plot, echo=TRUE, cache=TRUE}
+Models <- Models[ order(Models[,2]), ]
+ggplot(Models, aes(x=name, y=accuracy)) +
+  geom_point(size=4) +
+  geom_errorbar(aes(ymin=lower, ymax=upper), width=.2) + 
+  scale_x_discrete(limits=Models$name)+
+  coord_flip()
+
+```
+
+### Plot of elapsed training time
+During the model building phase, the function pre_proc() was used to calculate the time needed to build each of the 7 models. 
+
+In the graph below, the training elapsed time of each model will be plot versus the accuracy, so that in 1 single plot we have both the variables of interest for models comparison and evaluation.
+
+As you can see, Random Forest is an extremely resource consuming algorithm. It took 5.596 sec to train the data set on my iMac 2.7 GHz Core i5 with 8 GB 1600 DDR3 memory.
+
+The C5 algorithm, while having the same exact accuracy, takes 1/4 of time to train the same training data (1.387 sec).
+
+C5 is therefore a better model than Random Forest at least on this data set since while reaching the same accuracy, it is also much faster.
+
+Stretching this concept to an extreme, depending on how often the user is called to update the model building phase on (for instance on data set which may be updated frequently), one may also consider to use the Knn algorithm instead of C5 and Random Forest, because while not reaching the same accuracy (96,6% for the Knn and 99,4% for the C5 and Random Forest), Knn took only 1 minute and a half to train the data set while Random Forest took 1hr and 30 minutes and C5 approximately 23 minutes to perform the same task on the same dataset my computer.
+
+
+
+```{r times, echo=TRUE, cache=TRUE}
+
+rf_time
+c5_time
+knn_time
+GBM_time
+QDA_time
+FDA_time
+LDA_time
+
+```
+
+
+```{r elapsed_time_plot, echo=TRUE, cache=TRUE}
+ggplot(Models,aes(x=accuracy, y=elapsed_time)) + geom_point() + geom_text(aes(x=accuracy, label=name), size=4, vjust=-1.3)+ xlim(0.6, 1.1)+ ylim(0, 6300)
+
+
+```
+
+
+
+## PERFORMANCE ON THE TEST DATA
+As last step in this project, I would like to compare performance of Random Forest, C5 and Knn models, i.e the top 3 performing algorithms, on the 20 row data set provided in the project.
+Comparison will be performed both in terms of accuracy and in terms of testing elapsed time. Please notice that in this case, the elapsed time being considered is NOT the time to build the model (as above) but the time needed to make 20 predictions using already available models (built above).
+
+This test data will be used only once and, regardless the output, the models built will NOT be changed since otherwise this test set would become part of the training set.
+
+Before running the code, and before seeing the output I anticipate my expectations: if my analysis above is correct, I would expect the RF and C5 models giving the exact same output. I would expect also Knn to give the exact same result (Knn accuracy is not as good as C5 but it is still very high) even though I would not be surprised for a few discrepancies.
+
+Finally I would also expect Knn testing time to be much lower than Random Forest and C5.
+
+
+```{r test_data, echo=TRUE, cache=TRUE}
+
+testingData  <- read.csv("pml-testing.csv", header = TRUE)
+suppressWarnings(for (i in 1:(ncol(testingData )-1)) testingData [,i] <- as.numeric(as.character(testingData [,i])))
+
+ptm <- proc.time() 
+test_rf <- predict(rf, newdata = testingData)
+rf_test_time<- proc.time() - ptm
+
+ptm <- proc.time() 
+test_c5 <- predict(c5, newdata = testingData)
+c5_test_time<- proc.time() - ptm
+
+ptm <- proc.time() 
+test_knn <- predict(knn, newdata = testingData)
+knn_test_time<- proc.time() - ptm
+
+
+test_rf
+test_c5
+test_knn
+
+# Generate the 20 txt files with the 20 predictions to be submitted through the Coursera web page.
+# Please notice that these prediction has been generated through c5, i.e. the best model chosen for this data set. 
+
+  n = length(test_c5)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(test_c5[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+
+
+```
+
+
+Let's count the output difference between RF/C5 and between C5/Knn.  
+Number of different predicted cases between RF and C5: 
+```{r test_data2, echo=TRUE, cache=TRUE}
+
+sum(!(test_rf==test_c5))
+
+
+```
+
+Number of different predicted cases between C5 and Knn: 
+```{r test_data3, echo=TRUE, cache=TRUE}
+sum(!(test_knn==test_c5))
+``` 
+
+Differences in testing time: 
+```{r test_data4, echo=TRUE, cache=TRUE}
+
+rf_test_time
+c5_test_time
+knn_test_time
+
+rf_c5_ratio <- rf_test_time[3]/c5_test_time[3]
+c5_knn_ratio <-  c5_test_time[3]/knn_test_time[3]
+```
+
+
+C5 was `r rf_c5_ratio ` faster than RF in making predictions.  
+Knn was `r c5_knn_ratio` faster than C5 in making predictions.
+
+In contrast with the expectations, Knn produced 1 prediction different than the other 2 models.  
+On the other hand, as expected, Knn was the fastest model to perform the predictions.
+
+## CONCLUSIONS
+
+We have seen that while Random Forest and C5 are the best model on this data set and virtually indistinguishable each other, C5 is much better than Random Forest since it reaches the same results in a much shorter time. C5 is therefore chosen as preferred model on this data set.
+
+Knn may become a excellent alternative if training elapsed time is a concern:  giving up for a few points in accuracy, substantial gaining in training and testing processing times can be achieved.
+
+## APPENDIX 1: CONFUSION MATRIX OF EACH OF THE 7 CONSIDERED MODELS
+
+```{r out, echo=TRUE, cache=TRUE}
+cm_rf
+cm_c5
+cm_knn
+cm_lda
+cm_qda
+cm_fda
+cm_GBM
+```
+
+
