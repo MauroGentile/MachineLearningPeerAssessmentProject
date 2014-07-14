@@ -1,9 +1,11 @@
-Weight Lifting Exercise data analysis
+WEIGHT LIFTING EXCERCISE DATA ANALYSIS
 ========================================================
   
   
 ## SUMMARY 
 In this paper, several models will be built to fit the Weight Lifting Exercise data. The models will be compared each other and the best performing one will be chosen to make predictions on which class test data belongs to.
+
+The corresponding .Rmd source file with the code used to perform the analysis can be found at the following Github repository: <https://github.com/MauroGentile/PracMachineLearning>
 
 After an initial preprocessing, data will be split into a training set, representing the 70% of available data, and a validation set representing the remaining 30% of data. A total of 7 different classification models (Random Forest, Knn, C5, GBM, Linear, Quadratic and Flexible Discrmininant Analysis) will be then built on the training set and optimized through a 10 folds cross validation.
 

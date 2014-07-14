@@ -53,11 +53,12 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 
 
-<div id="weight-lifting-exercise-data-analysis" class="section level1">
-<h1>Weight Lifting Exercise data analysis</h1>
+<div id="weight-lifting-excercise-data-analysis" class="section level1">
+<h1>WEIGHT LIFTING EXCERCISE DATA ANALYSIS</h1>
 <div id="summary" class="section level2">
 <h2>SUMMARY</h2>
 <p>In this paper, several models will be built to fit the Weight Lifting Exercise data. The models will be compared each other and the best performing one will be chosen to make predictions on which class test data belongs to.</p>
+<p>The corresponding .Rmd source file with the code used to perform the analysis can be found at the following Github repository: <a href="https://github.com/MauroGentile/PracMachineLearning">https://github.com/MauroGentile/PracMachineLearning</a></p>
 <p>After an initial preprocessing, data will be split into a training set, representing the 70% of available data, and a validation set representing the remaining 30% of data. A total of 7 different classification models (Random Forest, Knn, C5, GBM, Linear, Quadratic and Flexible Discrmininant Analysis) will be then built on the training set and optimized through a 10 folds cross validation.</p>
 <p>The several models will be finally compared in terms of:<br />1. accuracy, evaluated on the validation set<br />2. training time, that is to say, the time needed by each model to train the training set</p>
 <p>As a result, it will be shown that Random Forest and C5 are the best performing alghorithms, both reaching a 99,4% accuracy. However C5 algorithm takes 1/4 of elapse time to train the same data set: on my iMac 2.7 GHz Core i5 with 8 GB 1600 DDR3 memory, while RF took 1 hr and 30 minutes to make a 10 cross validation on the training set, C5 took only 23 minutes to perform the same operation on the same data set.</p>
